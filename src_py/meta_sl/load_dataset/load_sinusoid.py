@@ -1,0 +1,62 @@
+import warnings
+from typing import Any, Dict, Tuple
+
+import torch
+from torchmeta.toy import Sinusoid
+from torchmeta.utils.data import BatchMetaDataLoader
+
+warnings.filterwarnings(action='ignore')
+
+def get_dataloader(
+	config: Dict[str, Any]
+) -> Tuple[BatchMetaDataLoader, BatchMetaDataLoader, BatchMetaDataLoader]:
+	train_dataset = Sinusoid(
+		num_samples_per_task=config['num_shots'] * 2,
+		num_tasks=config['num_batches_train'] * config['batch_size'],
+		noise_std=None,
+	)
+	train_dataloader = BatchMetaDataLoader(train_dataset, batch_size=config['batch_size'])
+
+	val_dataset = Sinusoid(
+		num_samples_per_task=config['num_shots'] * 2,
+		num_tasks=config['num_batches_val'] * config['batch_size'],
+		noise_std=None,
+	)
+	val_dataloader = BatchMetaDataLoader(val_dataset, batch_size=config['batch_size'])
+
+	test_dataset = Sinusoid(
+		num_samples_per_task=config['num_shots'] * 2,
+		num_tasks=config['num_batches_test'] * config['batch_size'],
+		noise_std=None,
+	)
+	test_dataloader = BatchMetaDataLoader(test_dataset, batch_size=config['batch_size'])
+
+	return train_dataloader, val_dataloader, test_dataloader
+
+
+if __name__ == '__main__':
+	config = {
+		'num_shots': 5,
+		'batch_size': 3,
+		'num_batches_train': 6000,
+		'num_batches_test': 2000,
+		'num_batches_val': 100,
+		'device': 'cpu', # 'cuda' or 'cpu'
+	}
+
+	train_dataloader, val_dataloader, test_dataloader = get_dataloader(config)
+
+	for batch_idx, batch in enumerate(val_dataloader):
+		xs, ys = batch
+		support_ys = ys[:, :config['num_shots'], :].to(device=config['device']).type(torch.float)
+		support_xs = xs[:, :config['num_shots'], :].to(device=config['device']).type(torch.float)
+		query_xs = xs[:, config['num_shots'], :].to(device=config['device']).type(torch.float)
+		query_ys = ys[:, config['num_shots'], :].to(device=config['device']).type(torch.float)
+
+		print(
+			f'support_x shape: {support_xs.shape}\n',
+			f'support_y shape: {support_ys.shape}\n',
+			f'query_x shape: {support_xs.shape}\n',
+			f'query_y shape: {support_ys.shape}\n',
+		)
+		break
