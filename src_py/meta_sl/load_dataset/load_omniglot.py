@@ -80,8 +80,7 @@ if __name__ == '__main__':
 			f'query_x shape: {support_xs.shape}\n',
 			f'query_y shape: {support_ys.shape}\n',
 		)
-		if batch_idx > 3:
-			break
+		break
 	
 	for b in range(config['batch_size']):
 		fig = plt.figure(constrained_layout=True, figsize=(18, 4))
